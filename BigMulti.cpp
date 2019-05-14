@@ -4,7 +4,7 @@
 
 const int max_size = 257;
 const int pre[10] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512};
-const int e[5] = { 1, 10, 100, 1000, 10000};
+const int e[10] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
 
 //判断符号,-0输出为0
 int suff(char x_suff, char y_suff) {
@@ -71,7 +71,7 @@ void devide(char* a, char* b, char* a1, char* a0, char* b1, char* b0) {
 	int half_n = 0;
 	if (len % 2 == 0)  half_n = len / 2;
 	else half_n = half_n = len / 2 + 1;
-	printf("half_n == %d\n", half_n);
+	//printf("half_n == %d\n", half_n);
 	//a划分
 	int m = a_len - half_n;
 	if (m <= 0) { 
@@ -155,54 +155,75 @@ void multi(char* a, char* b, char* c) {
 	num_to_str(result, c);
 }
 
-//小整数相加（<=4）
+//小整数相加（<=8）
 void add(char* a, char *b, char* c) {
-	int len = strlen(a);
+	int a_len = strlen(a), b_len = strlen(b);
 	int s = 0, t = 0, result = 0;
 	//字符窜转换为整数
-	for (int i = 0; i < len; i++) {
-		s = (a[i] - '0') * e[len - 1 - i] + s;
-		t = (b[i] - '0') * e[len - 1 - i] + t;
-	}
+	str_to_num(a, &s);
+	str_to_num(b, &t);
 	result = s + t;
-	//整数转字符窜
-	char temp[5];
-	int remain = result, count = 0;
-	for (int i = 0; i < 5 && remain != 0; i++) {
-		temp[i] = remain % 10;
-		remain = remain / 10;
-		count++;
-	}
-	for (int i = 0; i < count; i++)
-		c[i] = temp[count - 1 - i] + '0';
 	//printf("s = %d, t = %d, result == %d\n", s, t, result);
-	c[count] = '\0'; //结束符
-	//printf("c = %s\n", c);
+	num_to_str(result, c);
 }
 
 //乘以10^n:末尾添加零
-void add_tail(char* a, int n) {
-	int len = strlen(a);
+void add_tail(char* str, int n) {
+	int j  = strlen(str);
 	for (int i = 0; i < n; i++)
-		a[i] = '0';
-	a[len + n] = '\0';
+		str[j++] = '0';
+	str[j] = '\0';
 }
 
-//大整数(无符号)相加
+//大整数(无符号)相加(模拟手工计算)
 void big_add(char* a, char* b, char* c) {
-	int len = strlen(a);
-	if (len <= 4) {
-		add(a, b, c);//小整数相加
-		return;
+	int a_len = strlen(a), b_len = strlen(b), n = max(a_len, b_len);
+	printf("n = %d\n", n);
+	int carry = 0;//进位
+	char temp[max_size], ch;
+	for (int i = 0; i < n; i++) {
+		if (a_len > 0 && b_len > 0) {//做加法
+			ch = a[--a_len] - '0' + b[--b_len] - '0' + carry;
+			//printf("ch = %d\n", ch);
+			if (ch >= 10) {
+				carry = ch / 10;//进位
+				temp[i] = (ch % 10) + '0';
+			}
+			else {
+				carry = 0;
+				temp[i] = ch + '0';
+			}
+		}
+		else if (a_len <= 0 && b_len > 0) {
+			ch = b[--b_len] - '0' + carry;
+			//printf("ch = %d\n", ch);
+			if (ch >= 10) {
+				carry = ch / 10;//进位
+				temp[i] = (ch % 10) + '0';
+			}
+			else {
+				carry = 0;
+				temp[i] = ch + '0';
+			}
+		}
+		else if (a_len > 0 && b_len <= 0) {
+			ch = a[--a_len] - '0' + carry;
+			//printf("ch = %c\n", ch);
+			if (ch >= 10) {
+				carry = ch / 10;//进位
+				temp[i] = (ch % 10) + '0';
+			}
+			else {
+				carry = 0;
+				temp[i] = ch + '0';
+			}
+		}
 	}
-	char a1[max_size], a0[max_size], b1[max_size], b0[max_size], d1[max_size], d0[max_size];
-	devide(a, b, a1, a0, b1, b0);
-	big_add(a1, b1, d1);
-	big_add(a0, b0, d0);
-	//乘以10^n:末尾添加零
-	printf("d1 = %s\n", d1);
-	add_tail(d1, len / 2);
-	printf("d1 = %s\n", d1);
+	if (carry != '1') temp[n++] = '1';
+	printf("n = %d\n", n);
+	for (int i = 0; i < n; i++)
+		c[i] = temp[n - i - 1];
+	c[n] = '\0';
 }
 
 //计算c2, c1, c0
@@ -215,6 +236,14 @@ void get_c(char* a1, char * a0, char* b1, char* b0, char* c2, char* c1, char* c0
 	big_add(temp1, temp2, c1);//c1
 	big_multi(a0, b0, c0);//c0
 }
+/*
+A = a1 * 10^(n/2) + a0
+B = b1 * 10^(n/2) + b0
+A * B = c2 * 10^n + c1 * 10^(n/2) + c0
+其中：
+c2 = a1 * b1
+c1 = a0 * b1 + b0 * a1 = (a1 + a0) * (b1 + b0) - (c2 + c0)
+*/
 
 //大数相乘(无符号)
 void big_multi(char* a, char* b, char* c) {
@@ -230,21 +259,35 @@ void big_multi(char* a, char* b, char* c) {
 	devide(a, b, a1, a0, b1, b0);
 	printf("a1 = %s, a0 = %s, b1 = %s, b0 = %s\n", a1, a0, b1, b0);
 	//计算c2, c1, c0
+	//c2
+	big_multi(a1, b1, c2);
+	//c0
+	big_multi(a0, b0, c0);
+	//a0 * b1
+	char temp1[max_size];
+	big_multi(a0, a1, temp1);
+	//b0 * a1
+	char temp2[max_size];
+	big_multi(b0, b1, temp2);
+	//c1
+	big_add(temp1, temp2, c1);
 }
 
 int main(int argc, char* argv[]) {
 	char x[max_size];
 	char y[max_size];
 	scanf("%s%s", x, y);
-	printf("%s:%d, %s:%d\n", x, strlen(x), y, strlen(y));
-	if (suff(x[0], y[0]) == 0)printf("正数\n");
-	else printf("负数\n");
+	//printf("%s:%d, %s:%d\n", x, strlen(x), y, strlen(y));
+	//if (suff(x[0], y[0]) == 0)printf("正数\n");
+	//else printf("负数\n");
 	char a[max_size];
 	char b[max_size];
 	pre_proc(x, y, a, b);
-	printf("a = %s, b = %s\n", a, b);
+	//printf("a = %s, b = %s\n", a, b);
 	char c[max_size * 2];
-	big_multi(a, b, c);
+	//big_multi(a, b, c);
+	big_add(a, b, c);
+	printf("c = %s\n", c);
 }
 
 
