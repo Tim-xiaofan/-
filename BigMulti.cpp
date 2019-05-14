@@ -178,7 +178,7 @@ void add_tail(char* str, int n) {
 //大整数(无符号)相加(模拟手工计算)
 void big_add(char* a, char* b, char* c) {
 	int a_len = strlen(a), b_len = strlen(b), n = max(a_len, b_len);
-	printf("n = %d\n", n);
+	//printf("n = %d\n", n);
 	int carry = 0;//进位
 	char temp[max_size], ch;
 	for (int i = 0; i < n; i++) {
@@ -219,8 +219,8 @@ void big_add(char* a, char* b, char* c) {
 			}
 		}
 	}
-	if (carry != '1') temp[n++] = '1';
-	printf("n = %d\n", n);
+	if (carry != 0) temp[n++] = '1';
+	//printf("n = %d\n", n);
 	for (int i = 0; i < n; i++)
 		c[i] = temp[n - i - 1];
 	c[n] = '\0';
@@ -248,10 +248,14 @@ c1 = a0 * b1 + b0 * a1 = (a1 + a0) * (b1 + b0) - (c2 + c0)
 //大数相乘(无符号)
 void big_multi(char* a, char* b, char* c) {
 	//big_add(a, b, z);
-	int n = strlen(a), m = strlen(b);
-	if (m <= 4 && n <= 4) {//递归结束
+	int a_len = strlen(a), b_len = strlen(b);
+	int len = max(a_len, b_len);
+	int half_n = 0;
+	if (len % 2 == 0)  half_n = len / 2;
+	else half_n = half_n = len / 2 + 1;
+	if (len <= 4) {//递归结束
 		multi(a, b, c);//小整数相乘
-		printf("c = %s\n", c);
+		//printf("c = %s\n", c);
 		return;
 	}
 	//划分
@@ -261,16 +265,28 @@ void big_multi(char* a, char* b, char* c) {
 	//计算c2, c1, c0
 	//c2
 	big_multi(a1, b1, c2);
+	printf("c2 = a1 * b1 = %s\n", c2);
 	//c0
 	big_multi(a0, b0, c0);
+	printf("c0 = a0 * b0 = %s\n", c0);
 	//a0 * b1
 	char temp1[max_size];
-	big_multi(a0, a1, temp1);
+	big_multi(a0, b1, temp1);
+	//printf("temp1 = a0 * b1 + b0 * a1 = %s\n", temp1);
 	//b0 * a1
 	char temp2[max_size];
-	big_multi(b0, b1, temp2);
+	big_multi(b0, a1, temp2);
 	//c1
 	big_add(temp1, temp2, c1);
+	printf("c1 = a0 * b1 + b0 * a1 = %s\n", c0);
+	// c = c2 * 10^n + c1 * 10^(n/2) + c0
+	//c2 = c2 * 10^n
+	add_tail(c2, 2 * half_n);
+	//c1 = c1 * 10^(n/2)
+	add_tail(c1, half_n);
+	//结果
+	big_add(c2, c1, c);
+	big_add(c0, c, c);
 }
 
 int main(int argc, char* argv[]) {
@@ -285,8 +301,8 @@ int main(int argc, char* argv[]) {
 	pre_proc(x, y, a, b);
 	//printf("a = %s, b = %s\n", a, b);
 	char c[max_size * 2];
-	//big_multi(a, b, c);
-	big_add(a, b, c);
+	big_multi(a, b, c);
+	//big_add(a, b, c);
 	printf("c = %s\n", c);
 }
 
