@@ -4,7 +4,7 @@
 
 const int max_size = 257;
 const int pre[10] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512};
-const int e[4] = { 1, 10, 100, 1000 };
+const int e[5] = { 1, 10, 100, 1000, 10000};
 
 //判断符号,-0输出为0
 int suff(char x_suff, char y_suff) {
@@ -24,9 +24,11 @@ void pre_proc(char* x, char* y, char* a, char* b){
 	for (int i = 0; i < n; i++) {
 		a[i] = x[i + flag1];
 	}
+	a[n] = '\0';//添加结束符
 	for (int i = 0; i < m; i++) {
 		b[i] = y[i + flag2];
 	}
+	b[m] = '\0';//添加结束符
 	/*//取较大的长度
 	max = n;
 	if (n < m) max = m;
@@ -82,30 +84,43 @@ void devide(char* a, char* b, char* a1, char* a0, char* b1, char* b0) {
 	//printf("a1 = %s, a0 = %s, b1 = %s, b0 = %s\n", a1, a0, b1, b0);
 }
 
-//小整数数相乘(<=2)
-void multi(char* a, char* b, char* z) {
-	//printf("a = %s, b = %s\n", a, b);
-	int len = strlen(a);
-	int s = 0, t = 0, result = 0;
-	//字符窜转换为整数
-	for (int i = 0; i < len; i++) {
-		s = (a[i] - '0') * e[len - 1 - i] + s;
-		t = (b[i] - '0') * e[len - 1 - i] + t;
+//字符窜转换为整数
+void str_to_num(char* str, int* num) {
+	int n = strlen(str);
+	*num = 0;
+	for (int i = 0; i < n; i++) {
+		*num = (str[i] - '0') * e[n - 1 - i] + *num;
 	}
-	result = s * t;
-	//整数转字符窜
-	char temp[4];
-	int remain = result, count = 0;
-	for (int i = 0; i < 5 && remain != 0; i++) {
+}
+
+//整数转字符窜
+void num_to_str(int num, char* str) {
+	char temp[9];
+	int remain = num, count = 0;
+	if (remain == 0) {
+		str[0] = '0';
+		str[1] = '\0';
+		return;
+	}
+	for (int i = 0; i < 9 && remain != 0; i++) {
 		temp[i] = remain % 10;
 		remain = remain / 10;
 		count++;
 	}
 	for (int i = 0; i < count; i++)
-		z[i] = temp[count - 1 - i] + '0';
+		str[i] = temp[count - 1 - i] + '0';
+	str[count] = '\0'; //结束符
+}
+
+//小整数数相乘(<=4,无符号)
+void multi(char* a, char* b, char* c) {
+	//printf("a = %s, b = %s\n", a, b);
+	int s = 0, t = 0, result = 0;
+	str_to_num(a, &s);
+	str_to_num(b, &t);
+	result = s * t;
 	//printf("s = %d, t = %d, result == %d\n", s, t, result);
-	z[count] = '\0'; //结束符
-	printf("z = %s\n", z);
+	num_to_str(result, c);
 }
 
 //小整数相加（<=4）
@@ -169,20 +184,20 @@ void get_c(char* a1, char * a0, char* b1, char* b0, char* c2, char* c1, char* c0
 	big_multi(a0, b0, c0);//c0
 }
 
-//大数相乘
-void big_multi(char* x, char* y, char* z) {
-	char a[max_size]; //无符号数
-	char b[max_size];
-	pre_proc(x, y, a, b);//除去符号，添加前置零
-	big_add(a, b, z);
-	/*int len = strlen(a);
-	if (len <= 2)//递归结束
-		multi(a, b, z);//小整数相乘
+//大数相乘(无符号)
+void big_multi(char* a, char* b, char* c) {
+	//big_add(a, b, z);
+	int n = strlen(a), m = strlen(b);
+	if (m <= 4 && n <= 4) {//递归结束
+		multi(a, b, c);//小整数相乘
+		printf("c = %s\n", c);
+		return;
+	}
 	//划分
 	char a1[max_size], a0[max_size], b1[max_size], b0[max_size], c1[max_size], c0[max_size], c2[max_size];
-	devide(a, b, a1, a0, b1, b0);
+	//devide(a, b, a1, a0, b1, b0);
 	//printf("a1 = %s, a0 = %s, b1 = %s, b0 = %s\n", a1, a0, b1, b0);
-	//计算c2, c1, c0*/
+	//计算c2, c1, c0
 }
 
 int main(int argc, char* argv[]) {
@@ -194,10 +209,10 @@ int main(int argc, char* argv[]) {
 	else printf("负数\n");
 	char a[max_size];
 	char b[max_size];
-	//pre_proc(x, y, a, b);
-	//printf("a = %s, b = %s\n", a, b);
-	char z[max_size * 2];
-	big_multi(x, y, z);
+	pre_proc(x, y, a, b);
+	printf("a = %s, b = %s\n", a, b);
+	char c[max_size * 2];
+	big_multi(a, b, c);
 }
 
 
