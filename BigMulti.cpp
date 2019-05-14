@@ -57,9 +57,9 @@ void pre_proc(char* x, char* y, char* a, char* b){
 	b[len] = '\0';*/
 }
 
-int min(int a, int b) {
+int max(int a, int b) {
 	int m = a;
-	if (b < a)
+	if (b > a)
 		m = b;
 	return m;
 }
@@ -67,30 +67,51 @@ int min(int a, int b) {
 //划分a1, a0, b1, b0
 void devide(char* a, char* b, char* a1, char* a0, char* b1, char* b0) {
 	int a_len = strlen(a),b_len = strlen(b);
-	int len = min(a_len, b_len), n = len / 2, flag = 0;//以短划分
-	if (n == 0) { n = 1; flag = 1; }//至少按1分
+	int len = max(a_len, b_len);
+	int half_n = 0;
+	if (len % 2 == 0)  half_n = len / 2;
+	else half_n = half_n = len / 2 + 1;
+	printf("half_n == %d\n", half_n);
 	//a划分
-	for (int i = 0; i < n; i++)
-		a1[i] = a[i];
-	a1[n] = '\0';
-	int j = 0;
-	for (int i = n; i < a_len; i++) {
-		a0[j] = a[i];
-		j++;
+	int m = a_len - half_n;
+	if (m <= 0) { 
+		a1[0] = '0';
+		a1[1] = '\0';
+		strcpy(a0, a);
 	}
-	if (j == 0) { a0[0] = '0'; a0[1] = '\0'; }
-	else a0[j] = '\0';
+	else {
+		for (int i = 0; i < m; i++)
+			a1[i] = a[i];
+		a1[m] = '\0';
+		int j = 0, start = m;
+		while (a[start] == '0') start++;//避免前置零
+		for (int i = start; i < a_len; i++) {
+			a0[j] = a[i];
+			j++;
+		}
+		if (j == 0) { a0[0] = '0'; a0[1] = '\0'; }
+		else a0[j] = '\0';
+	}
 	//b划分
-	for (int i = 0; i < n; i++)
-		b1[i] = b[i];
-	b1[n] = '\0';
-	j = 0;
-	for (int i = n; i < b_len; i++) {
-		b0[j] = b[i];
-		j++;
+	m = b_len - half_n;
+	if (m <= 0) {//长度不足以拆分
+		b1[0] = '0';
+		b1[1] = '\0';
+		strcpy(b0, b);
 	}
-	if (j == 0) { b0[0] = '0'; b0[1] = '\0'; }
-	else b0[j] = '\0';
+	else {
+		for (int i = 0; i < m; i++)
+			b1[i] =b[i];
+		b1[m] = '\0';
+		int j = 0, start = m;
+		while (b[start] == '0') start++;//避免前置零
+		for (int i = start; i < b_len; i++) {
+			b0[j] = b[i];
+			j++;
+		}
+		if (j == 0) { b0[0] = '0'; b0[1] = '\0'; }
+		else b0[j] = '\0';
+	}
 	//b划分
 	//printf("a1 = %s, a0 = %s, b1 = %s, b0 = %s\n", a1, a0, b1, b0);
 }
