@@ -29,32 +29,6 @@ void pre_proc(char* x, char* y, char* a, char* b){
 		b[i] = y[i + flag2];
 	}
 	b[m] = '\0';//添加结束符
-	/*//取较大的长度
-	max = n;
-	if (n < m) max = m;
-	printf("n = %d, m = %d, max = %d\n", n, m, max);
-	//补充为2幂的长
-	int len = 0;
-	for (int i = 0; i < 10; i++) {
-		if (max <= pre[i]) { 
-			len = pre[i];
-			break;
-		}
-	}
-	printf("len = %d\n", len);
-	//添加前置零
-	int deta = len - n;
-	for (int i = 0; i < len; i++) {
-		if (i < deta) a[i] = '0';
-		else a[i] = x[i - deta + flag1];
-	}
-	a[len] = '\0';//添加结束符
-	deta = len - m;
-	for (int i = 0; i < len; i++) {
-		if (i < deta) b[i] = '0';
-		else b[i] = y[i - deta + flag2];
-	}
-	b[len] = '\0';*/
 }
 
 int max(int a, int b) {
@@ -129,8 +103,8 @@ void str_to_num(char* str, int* num) {
 void num_to_str(int num, char* str) {
 	char temp[9];
 	int remain = num, count = 0;
-	if (remain == 0) {
-		str[0] = '0';
+	if (remain < 10) {//0---9
+		str[0] = '0' + remain;
 		str[1] = '\0';
 		return;
 	}
@@ -139,6 +113,8 @@ void num_to_str(int num, char* str) {
 		remain = remain / 10;
 		count++;
 	}
+	//temp[count] = '\0';
+	//printf("temp = %s", temp);
 	for (int i = 0; i < count; i++)
 		str[i] = temp[count - 1 - i] + '0';
 	str[count] = '\0'; //结束符
@@ -153,6 +129,7 @@ void multi(char* a, char* b, char* c) {
 	result = s * t;
 	//printf("s = %d, t = %d, result == %d\n", s, t, result);
 	num_to_str(result, c);
+	//printf("c = %s\n", c);
 }
 
 //小整数相加（<=8）
@@ -292,7 +269,7 @@ void big_multi(char* a, char* b, char* c) {
 void add_suffix(char suf1, char suf2, char* c, char* z) {
 	int start = 0, n = strlen(c);
 	while (c[start] == '0' && start < n - 1) start++;//除去结果中的前置置零
-	if (start == n - 1 && c[n - 1]) {//零：00， 00000
+	if (start == n - 1 && c[n - 1] == '0') {//零：00， 00000
 		z[0] = '0';
 		z[1] = '\0';
 		return;
@@ -340,6 +317,7 @@ void big_multi_suffix(char* x, char* y, char* z) {
 	big_multi(a, b, c);
 	//判断符号
 	add_suffix(x[0], y[0], c, z);
+	//printf("z = %s\n", z);
 }
 
 int main(int argc, char* argv[]) {
@@ -350,8 +328,5 @@ int main(int argc, char* argv[]) {
 	//big_add(a, b, c);
 	char z[max_size];
 	big_multi_suffix(x, y, z);
-	printf("z = %s\n", z);
+	printf("result = %s\n", z);
 }
-
-
-
