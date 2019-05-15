@@ -11,11 +11,15 @@ public add2 ;允许被C模块使用
 public sub2
 public mul2
 public div2
+public angle_sin
+public angle_cos
+public angle_tan
 extern _result: real8 ;来自C模块
 
 ;数据段
 .data					
 	;定义这些分段是把不同类型的数据或代码归类，放到不同的属性内存页中，dos下定义是赋值给寄存器
+    temp real8 180.0
 ;代码段
 .code					;所有指令都必须放在代码段，在可执行文件中，代码段放在_TEXT节区（区块）中）
 
@@ -58,4 +62,37 @@ div2 proc C a:real8, b:real8 ;使用c规则
     fst _result
     ret
 div2 endp
+
+;三角函数sin
+angle_sin proc C a:real8;使用c规则
+    finit ;初始化堆栈
+    fldpi ;st(0) = pi
+    fmul a ;st(0) = pi * a;
+    fdiv temp ; st(0) = st(0) /180
+    fsin ;sin(st0)
+    fst _result
+    ret
+angle_sin endp
+
+;三角函数cos
+angle_cos proc C a:real8;使用c规则
+    finit ;初始化堆栈
+    fldpi ;st(0) = pi
+    fmul a ;st(0) = pi * a;
+    fdiv temp ; st(0) = st(0) /180
+    fcos ;sin(st0)
+    fst _result
+    ret
+angle_cos endp
+
+;三角函数tan
+angle_tan proc C a:real8;使用c规则
+    finit ;初始化堆栈
+    fldpi ;st(0) = pi
+    fmul a ;st(0) = pi * a;
+    fdiv temp ; st(0) = st(0) /180
+    fptan ;sin(st0)
+    fst _result
+    ret
+angle_tan endp
 end ;必须使用
