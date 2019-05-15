@@ -2,7 +2,7 @@
 #include <cstring>
 #include <stdlib.h>
 
-const int max_size = 257;
+const int max_size = 258;
 const int pre[10] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512};
 const int e[10] = { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
 
@@ -84,7 +84,7 @@ void devide(char* a, char* b, char* a1, char* a0, char* b1, char* b0) {
 			a1[i] = a[i];
 		a1[m] = '\0';
 		int j = 0, start = m;
-		while (a[start] == '0') start++;//避免前置零
+		while (a[start] == '0' && start < a_len - 1) start++;//避免前置零
 		for (int i = start; i < a_len; i++) {
 			a0[j] = a[i];
 			j++;
@@ -104,7 +104,7 @@ void devide(char* a, char* b, char* a1, char* a0, char* b1, char* b0) {
 			b1[i] =b[i];
 		b1[m] = '\0';
 		int j = 0, start = m;
-		while (b[start] == '0') start++;//避免前置零
+		while (b[start] == '0' && start < b_len) start++;//避免前置零
 		for (int i = start; i < b_len; i++) {
 			b0[j] = b[i];
 			j++;
@@ -261,14 +261,14 @@ void big_multi(char* a, char* b, char* c) {
 	//划分
 	char a1[max_size], a0[max_size], b1[max_size], b0[max_size], c1[max_size], c0[max_size], c2[max_size];
 	devide(a, b, a1, a0, b1, b0);
-	printf("a1 = %s, a0 = %s, b1 = %s, b0 = %s\n", a1, a0, b1, b0);
+	//printf("a1 = %s, a0 = %s, b1 = %s, b0 = %s\n", a1, a0, b1, b0);
 	//计算c2, c1, c0
 	//c2
 	big_multi(a1, b1, c2);
-	printf("c2 = a1 * b1 = %s\n", c2);
+	//printf("c2 = a1 * b1 = %s\n", c2);
 	//c0
 	big_multi(a0, b0, c0);
-	printf("c0 = a0 * b0 = %s\n", c0);
+	//printf("c0 = a0 * b0 = %s\n", c0);
 	//a0 * b1
 	char temp1[max_size];
 	big_multi(a0, b1, temp1);
@@ -278,7 +278,7 @@ void big_multi(char* a, char* b, char* c) {
 	big_multi(b0, a1, temp2);
 	//c1
 	big_add(temp1, temp2, c1);
-	printf("c1 = a0 * b1 + b0 * a1 = %s\n", c0);
+	//printf("c1 = a0 * b1 + b0 * a1 = %s\n", c0);
 	// c = c2 * 10^n + c1 * 10^(n/2) + c0
 	//c2 = c2 * 10^n
 	add_tail(c2, 2 * half_n);
@@ -288,22 +288,69 @@ void big_multi(char* a, char* b, char* c) {
 	big_add(c2, c1, c);
 	big_add(c0, c, c);
 }
+//判断符号,除去前置零
+void add_suffix(char suf1, char suf2, char* c, char* z) {
+	int start = 0, n = strlen(c);
+	while (c[start] == '0' && start < n - 1) start++;//除去结果中的前置置零
+	if (start == n - 1 && c[n - 1]) {//零：00， 00000
+		z[0] = '0';
+		z[1] = '\0';
+		return;
+	}
+	if (suff(suf1, suf2) == 0) { //正数
+		int len = n - start;//带符号数的长度
+		for (int i = 0; i < len; i++)
+			z[i] = c[start++];
+		z[len] = '\0';
+	}
+	else {//负数
+		int len = n - start + 1;
+		z[0] = '-';
+		for (int i = 1; i < len; i++)
+			z[i] = c[start++];
+		z[len] = '\0';
+	}
+}
 
-int main(int argc, char* argv[]) {
-	char x[max_size];
-	char y[max_size];
-	scanf("%s%s", x, y);
-	//printf("%s:%d, %s:%d\n", x, strlen(x), y, strlen(y));
-	//if (suff(x[0], y[0]) == 0)printf("正数\n");
-	//else printf("负数\n");
+//检查乘数合法性
+int check_input(char* x, char* y) {
+	int x_len = strlen(x), y_len = strlen(y);
+	for(int i = 0; i < x_len; i++)
+		if(x[i] != '-' && (x[i] < '0' || x[i] > '9'))//既不是数字，也不是负号，非法
+			return -1;
+	for (int i = 0; i < y_len; i++)
+		if (y[i] != '-' && (y[i] < '0' || y[i] > '9'))//既不是数字，也不是负号，非法
+			return -1;
+	return 1;
+}
+
+//大整数相乘，带符号
+void big_multi_suffix(char* x, char* y, char* z) {
+	if (check_input(x, y) == -1) {
+		printf("含有非法字符\n");
+		z[0] = '0';
+		z[1] = '\0';
+		return;
+	}
 	char a[max_size];
 	char b[max_size];
 	pre_proc(x, y, a, b);
 	//printf("a = %s, b = %s\n", a, b);
 	char c[max_size * 2];
 	big_multi(a, b, c);
+	//判断符号
+	add_suffix(x[0], y[0], c, z);
+}
+
+int main(int argc, char* argv[]) {
+	char x[max_size];
+	char y[max_size];
+	scanf("%s%s", x, y);
+	//printf("%s:%d, %s:%d\n", x, strlen(x), y, strlen(y));
 	//big_add(a, b, c);
-	printf("c = %s\n", c);
+	char z[max_size];
+	big_multi_suffix(x, y, z);
+	printf("z = %s\n", z);
 }
 
 
